@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TutorDuel</title>
+<meta name="description" content="TutorDuel: a benchmark for online LLM personalization from pairwise preferences across users, and CODuel, a first baseline. Paper, data, code and leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">TutorDuel <small>+ CODuel</small></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#loop">Watch</a>
+      <a href="#play">Play a session</a>
+      <a href="#problem">Problem</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#results">Results</a>
+      <a href="#method">Method</a>
+      <a href="#use">Run it</a>
+      <a href="#paper">Paper</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Benchmark and paper · Massachusetts Institute of Technology · 2026</p>
+    <h1>Online LLM Personalization from Pairwise Preferences Across Users</h1>
+    <p class="lede">
+      A chatbot can answer the same question in several styles, and users differ in which one they prefer.
+      <strong>TutorDuel</strong> is a benchmark for learning those preferences online: users arrive one after another with hidden tastes, each asks 24 questions, and the only feedback is which of two displayed answers they chose.
+      The task is to choose the two answers to show, every time, for every user, and to be scored on both.
+      <strong>CODuel</strong> is a first baseline. It learns from completed sessions to adapt faster to each new user.
+    </p>
+    <div class="authors">
+      <div>Romain Puech</div>
+      <div>Georgy Salakhutdinov</div>
+      <div>Dimitris Bertsimas</div>
+      <span>Massachusetts Institute of Technology</span>
+    </div>
+    <div class="actions">
+      <a class="btn" href="#paper" aria-disabled="true" title="Available soon">Paper <small>soon</small></a>
+      <a class="btn" href="#use" aria-disabled="true" title="Public release with the camera-ready version">Code <small>soon</small></a>
+      <a class="btn" href="#benchmark" aria-disabled="true" title="Public release with the camera-ready version">Dataset <small>soon</small></a>
+      <a class="btn" href="#paper">BibTeX</a>
+    </div>
+    <div class="facts">
+      <div><b>6</b><span>teaching personas, one system prompt each</span></div>
+      <div><b>24</b><span>questions per student session</span></div>
+      <div><b>3 × 350</b><span>students on the evaluation rosters, never used in design</span></div>
+      <div><b>44–48</b><span>CODuel's benchmark score (random pairs 0; per-user linear oracle 81–85)</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="loop">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Live · one lap of the loop per student</p>
+      <h2>Watch the policy learn across students</h2>
+      <p>Students arrive one after another. For each of a student's 24 questions the policy shows two of the six personas and sees one click. When the session ends it joins the log, the population model refits, and the next student starts from what earlier students had in common. Drawn live on real sessions of the held-out-profile roster, with the judge's stored click probabilities.</p>
+    </div>
+    <div class="card loop" data-loop data-phase="arrive">
+      <div class="loop-stage"><canvas data-stage aria-label="Animated loop: a student arrives, 24 duels with the policy's belief updating on each click, the session is stored, the population model refits."></canvas></div>
+      <aside class="loop-hud">
+        <div class="h-top"><span class="eyebrow" data-h-arrival>arrival t = 1</span><strong data-h-act>A student arrives</strong></div>
+        <dl class="h-stats">
+          <div><dt>question</dt><dd data-h-question>0 / 24</dd></div>
+          <div><dt>clicks observed</dt><dd data-h-clicks>0</dd></div>
+          <div><dt>completed sessions</dt><dd data-h-sessions>0</dd></div>
+          <div><dt>user types learned</dt><dd data-h-types>0</dd></div>
+          <div><dt>transfer gate</dt><dd data-h-gate data-on="false">off</dd></div>
+        </dl>
+        <div class="h-chart">
+          <span class="eyebrow">excess regret per user by arrival · the paper's run on this roster</span>
+          <canvas data-regret aria-label="Excess strong regret per user against arrival, CODuel and no transfer, revealed up to the current arrival"></canvas>
+          <div class="readout" data-h-readout></div>
+        </div>
+      </aside>
+      <div class="loop-rail">
+        <button class="btn" data-l-play aria-label="Pause">❚❚</button>
+        <button class="chip" data-l-chip>1 · Arrive</button>
+        <button class="chip" data-l-chip>2 · Duel</button>
+        <button class="chip" data-l-chip>3 · Store</button>
+        <button class="chip" data-l-chip>4 · Update</button>
+        <button class="chip" data-l-skip>⏩ 25 students</button>
+        <button class="btn" data-l-speed style="margin-left:auto">1×</button>
+      </div>
+    </div>
+    <p class="hint">The stage replays real sessions with a simplified learner: a diagonal Bayesian logistic learner per student, a clustered population prior fitted on completed sessions' clicks, and CODuel's evidence gate. Its clicks are drawn from the judge's stored probabilities, and the hollow bars are the hidden utilities the regret is scored on. The panel on the right is the paper's measured curve on this roster (64 seeds, centered 25-arrival means with 95% bands), not the stage's own tally. The full method and all numbers are in Results.</p>
+  </div>
+</section>
+
+<section id="play">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Interactive · real benchmark data</p>
+      <h2>Be the policy for one student</h2>
+      <p>
+        One real session from the held-out-profile roster: a simulated student with a hidden profile and 24 questions.
+        Each round, pick two of the six personas. The student's click is drawn from the judge's stored probability for that pair, exactly as in the benchmark,
+        and the hidden utilities are revealed only after the click. Random pairs score 0. Showing the student's two best personas on every question would score 100.
+      </p>
+    </div>
+
+    <div class="player" data-play>
+      <div class="card stage">
+        <div class="stage-top">
+          <div class="seg" data-students role="group" aria-label="Choose a student"></div>
+          <span class="mono muted" data-round>Question 1 of 24</span>
+        </div>
+        <div class="q">
+          <div class="eyebrow"><span>The student asks</span><span data-qid></span></div>
+          <p data-question></p>
+        </div>
+        <div class="personas" data-personas role="group" aria-label="Pick two personas"></div>
+        <div class="stage-actions">
+          <button class="btn primary" data-show disabled>Show these two answers</button>
+          <span class="hint" data-hint>Pick two personas. The first one you pick is shown first.</span>
+        </div>
+        <div class="result" data-result hidden></div>
+        <div class="done" data-done hidden></div>
+      </div>
+
+      <aside class="aside">
+        <div class="card profile">
+          <div class="row">
+            <span class="eyebrow">Hidden student profile</span>
+            <button class="copy" data-peek>Peek</button>
+          </div>
+          <p class="text" data-profile-text data-hidden="true"></p>
+          <p class="hint">The policy never sees this text. It sees the question, the six persona prompts, and the clicks so far.</p>
+        </div>
+        <div class="card tally">
+          <div class="score"><b data-score>–</b><span>your benchmark score so far</span></div>
+          <dl data-tally></dl>
+          <svg class="minichart" data-minichart viewBox="0 0 300 150" role="img" aria-label="Cumulative excess strong regret over the session: you, random pairs, and the best fixed pair in hindsight"></svg>
+          <div class="keyline"><span><i class="you"></i>you</span><span><i class="rand"></i>random pairs</span><span><i class="bf"></i>best fixed pair</span></div>
+          <button class="btn" data-auto>Let random pairs finish the session</button>
+          <button class="btn" data-restart>Restart this student</button>
+        </div>
+      </aside>
+    </div>
+    <p class="note">Numbers on this card are computed in the browser from the roster's stored utilities and click probabilities for this arrival. One session is a noisy sample. The leaderboard below sums 350 students and 32 to 64 seeds.</p>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">The problem</p>
+      <h2>One click per question, both answers judged</h2>
+      <p>We formalize the interaction as a multi-user contextual dueling bandit. A policy must serve a sequence of short sessions, starting with no preference data, and each user's log is the only thing later users can benefit from.</p>
+    </div>
+    <figure>
+      <img src="assets/fig1_overview.png" alt="Four panels: a new user arrives with hidden preferences and a question; the policy picks two of six personas using completed sessions; the user chooses between the two generated answers; strong regret sums both answers' gaps to the user's best persona." width="2600" height="932">
+      <figcaption>A new user arrives with hidden preferences and asks <i>b</i> = 24 questions. On each question the policy picks two of the <i>K</i> = 6 personas, using earlier users' sessions and the current user's choices so far, and the user chooses between the two generated answers. Strong regret, computed from hidden utilities, sums the gaps of both displayed answers to the user's best persona.</figcaption>
+    </figure>
+    <div class="cols">
+      <div class="col">
+        <span class="k">1 · users</span>
+        <h3>Each user comes once</h3>
+        <p>A user's preference vector θ<sub>i</sub> is drawn from an unknown population and stays fixed for the session's 24 questions. Then the user leaves. The population's shared structure is what makes transfer possible.</p>
+      </div>
+      <div class="col">
+        <span class="k">2 · arms</span>
+        <h3>Six personas, known features</h3>
+        <p>The utility of persona <i>p</i> on question <i>q</i> is θ<sub>i</sub><sup>⊤</sup>φ(<i>p</i>, <i>q</i>). The features φ come from the persona prompt and the question text alone, so the policy ranks personas before any answer is generated. Only the two selected answers are produced.</p>
+      </div>
+      <div class="col">
+        <span class="k">3 · feedback</span>
+        <h3>One pairwise click</h3>
+        <p>The user's choice follows a Bradley–Terry–Luce model on the two displayed answers' true utilities. The policy learns only from the comparisons it selected, for this user and for all earlier ones.</p>
+      </div>
+      <div class="col">
+        <span class="k">4 · objective</span>
+        <h3>Strong regret</h3>
+        <p>Both displayed answers are charged their gap to the user's best persona on that question. Even a policy that knows the user pays the gap between the best and the second-best persona, so a distinct-pair floor <i>G<sub>T</sub></i> is unavoidable.</p>
+      </div>
+    </div>
+    <div class="prose">
+      <div class="formula">r<sub>t</sub> = 2·U<sub>i</sub>(p*, q<sub>t</sub>) − U<sub>i</sub>(p<sub>t,1</sub>, q<sub>t</sub>) − U<sub>i</sub>(p<sub>t,2</sub>, q<sub>t</sub>)<br>R<sub>T</sub> = Σ<sub>t</sub> r<sub>t</sub> &nbsp;&nbsp; excess regret = R<sub>T</sub> − G<sub>T</sub><br>benchmark score = 100 · (R<sub>T</sub><sup>rand</sup> − R<sub>T</sub>) / (R<sub>T</sub><sup>rand</sup> − G<sub>T</sub>)</div>
+      <p>The score is the share of random pairs' excess regret that a policy removes. Random pairs score 0. A policy would score 100 only by reaching the floor on every question, which no policy is expected to do: the floor follows every question-specific preference, including the judge's disagreement between display orders. As a reference for what a learner can reach, a per-user linear oracle, which chooses each user's parameters in hindsight on CODuel's features, scores 81 to 85 on the evaluation rosters.</p>
+    </div>
+  </div>
+</section>
+
+<section id="benchmark">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">The benchmark</p>
+      <h2>What is in TutorDuel</h2>
+      <p>A tutoring case study: educational questions, tutor answers in six teaching styles, and pairwise judgments from LLM-simulated students with hidden preference profiles. Policies see persona-question features and sampled clicks. Answer texts, probabilities and utilities stay hidden from them.</p>
+    </div>
+    <div class="cols" data-persona-cards></div>
+    <div class="cols">
+      <div class="col">
+        <span class="k">questions</span>
+        <h3>24 per session, four topics</h3>
+        <p>Each topic has two chains of three questions: a definition, a computation, and a why-question. Every question ends with one of 13 first-person cues, such as <i>“I need a line I can quote in an exam.”</i>, so the preferred persona can move within a session. Questions by <code>gpt-5.6-sol</code>, answers by <code>gpt-5.6-terra</code>.</p>
+      </div>
+      <div class="col">
+        <span class="k">students</span>
+        <h3>Hand-written and template profiles</h3>
+        <p>Sixteen hand-written profiles, eight for development and eight held out. Two further rosters render students from a seven-trait template: <b>Composite</b> uses 350 distinct trait combinations of 3,072, and <b>Quirky</b> draws traits uniformly and adds two of ten quirks, such as disliking numbered lists.</p>
+      </div>
+      <div class="col">
+        <span class="k">judge</span>
+        <h3>A role-playing LLM judge</h3>
+        <p><code>gpt-6-luna</code> with reasoning off adopts the student and picks A or B. For every persona pair we cover both display orders and both label assignments with four sampled choices each, 240 picks per question and student, and average the smoothed log-odds. 2,448,000 prompts are stored.</p>
+      </div>
+      <div class="col">
+        <span class="k">validity</span>
+        <h3>Checked against people and a second judge</h3>
+        <p>Two authors labeled 200 choices on 160 comparisons. The judge agrees with each author (70.0% and 82.5%) as often as the authors agree with each other (72.5%). Judged a second time by TypeSafe Jev, with <code>gpt-6-luna</code> as the rater, the 378,000 comparisons of the three evaluation rosters agree with the first judge in 80.7% of those where neither judge is indifferent, and CODuel ranks first on all three rosters under both judges.</p>
+      </div>
+      <div class="col">
+        <span class="k">features</span>
+        <h3>φ(p, q) from text alone</h3>
+        <p>A rater model, TypeSafe Jev, scores how well each persona's answer style suits the question, from the question text and the persona prompts alone. One call rates all six personas, for about $0.03 per 1,000 questions. With g(p, q) the score centered over the personas and scaled to unit standard deviation, φ(p, q) = [e<sub>p</sub>, g(p, q)] ∈ ℝ<sup>7</sup>: a user's weights on the indicators e<sub>p</sub> express a constant preference for each persona, and the weight on g how closely the user follows the rater.</p>
+      </div>
+      <div class="col">
+        <span class="k">utilities</span>
+        <h3>Bradley–Terry references</h3>
+        <p>For each student and question, one score per persona is fitted to the 15 pairwise probabilities by ridge-regularized maximum likelihood and mapped to U ∈ [0, 1] with a common scale of 8 logits. Clicks are drawn from the judge's probabilities, regret is scored on U.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="table-tools"><span>Rosters. Every evaluation roster uses new question packs on topics disjoint from development.</span></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Roster</th><th class="num">Arrivals</th><th>Students</th><th>Topics</th><th>Role</th><th class="num">Seeds</th></tr></thead>
+          <tbody>
+            <tr><td>Development</td><td class="num">300</td><td>8 hand-written profiles</td><td>development</td><td>every design choice, including CODuel's settings</td><td class="num">32</td></tr>
+            <tr><td>Held-out topics</td><td class="num">350</td><td>the same 8 profiles</td><td>new</td><td>new questions, known kinds of students</td><td class="num">64</td></tr>
+            <tr><td>Held-out profiles</td><td class="num">350</td><td>8 new hand-written profiles</td><td>new</td><td>evaluation</td><td class="num">64</td></tr>
+            <tr><td>Composite</td><td class="num">350</td><td>350 distinct template students</td><td>new</td><td>evaluation</td><td class="num">32</td></tr>
+            <tr><td>Quirky</td><td class="num">350</td><td>350 template students, two quirks each</td><td>new</td><td>evaluation</td><td class="num">32</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note">Every experiment replays the stored judge probabilities on CPU. No GPU and no API key are needed to run a policy; the API is only used by the data-generation scripts. For a given seed all policies see the same users, questions and uniform draws, so identical pairs receive identical clicks.</p>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Results</p>
+      <h2>Learning over the arrivals</h2>
+      <p>Excess strong regret per user as users arrive, on the three evaluation rosters. Every policy starts from the first arrival with no preference data. A learner that treats each user alone stays flat. CODuel learns each user alone until its gate turns transfer on, after at least eight users, and then improves as its mixture forms.</p>
+    </div>
+
+    <div class="card chart" data-curves>
+      <div class="chart-top">
+        <div class="seg" role="group" aria-label="Roster">
+          <button data-roster="U" aria-pressed="true">Held-out profiles</button>
+          <button data-roster="C" aria-pressed="false">Composite</button>
+          <button data-roster="I" aria-pressed="false">Quirky</button>
+        </div>
+        <div class="legend" data-legend role="group" aria-label="Methods"></div>
+      </div>
+      <svg class="curves" role="img" aria-label="Excess strong regret per user against user arrival, one line per method, with 95 percent bands for CODuel and the no-transfer ablation."></svg>
+      <div class="readout" data-readout></div>
+      <p class="hint" data-curve-caption></p>
+    </div>
+    <div class="callouts" data-callouts></div>
+
+    <div class="section-head" style="margin-top:12px">
+      <h2>Leaderboard</h2>
+      <p>Benchmark score, the share of random pairs' excess regret removed (higher is better), with the excess regret R<sub>T</sub> − G<sub>T</sub> summed over the run, mean ± s.e. over seeds. Italic rows are references. Every method starts from the first arrival of each roster.</p>
+    </div>
+    <div data-leaderboard>
+      <div class="table-tools">
+        <span>Click a roster to sort the methods by it.</span>
+        <label><input type="checkbox" id="extra-cols" data-extra-cols> Also show held-out topics and development</label>
+      </div>
+      <div class="tablewrap"><table data-table></table></div>
+    </div>
+
+    <div class="cols">
+      <div class="col">
+        <span class="k">finding</span>
+        <h3>On the held-out profiles, only CODuel's transfer helps</h3>
+        <p>On the held-out profiles, every other method that shares information across users scores below the no-transfer ablation (17 to 23, against 30). The closest method there is CoLSTIM-style, which learns each user alone, and CODuel has 22.8% less excess regret. On Composite and Quirky, the same methods score above the ablation (31 to 38, against 27 and 28), and the closest is COLDB, at 9.3% and 12.5%.</p>
+      </div>
+      <div class="col">
+        <span class="k">finding</span>
+        <h3>Identifying the student is most of the remaining gap</h3>
+        <p>The best fixed pair per user, chosen in hindsight, scores 76, 66 and 68 on the three evaluation rosters, and the per-user linear oracle, which can also change the pair from one question to the next, scores 85, 81 and 82. Knowing each student's best pair would therefore close most of CODuel's distance to the oracle; adapting to each question accounts for the rest.</p>
+      </div>
+      <div class="col">
+        <span class="k">finding</span>
+        <h3>The gate holds on negative controls</h3>
+        <p>On a scrambled roster, where each student's choices are relabeled by their own permutation of the personas, and on a simulated population with no shared structure, CODuel stays within one percent of its no-transfer ablation. Without the gate, the same policy raises excess regret by 13% on the simulated population and stays within noise on the scrambled roster.</p>
+      </div>
+      <div class="col">
+        <span class="k">finding</span>
+        <h3>The learned population does the work</h3>
+        <p>Removing the population model raises excess regret by 29% to 31% on the evaluation rosters, and recalibrating the rater's scores lowers it by 2.3% to 4.1%. On the development roster, the lookahead pair rule is within noise of greedy pairs. New students, rather than new topics alone, cost 6 to 10 points of score.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="method">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Baseline method</p>
+      <h2>CODuel: collaborative dueling</h2>
+      <p>CODuel learns from completed sessions which kinds of users recur, and uses that to adapt faster to each new one. It is a Bayesian logistic learner with a prior that is itself learned, a recalibration of the rater's scores from completed sessions, a pair rule that values what a click will reveal, and a check that turns transfer off when it does not help. All of its settings were fixed on the development roster.</p>
+    </div>
+    <div class="cols three">
+      <div class="col">
+        <span class="k">score recalibration</span>
+        <h3>Correct the rater's scores with past clicks</h3>
+        <p>A rater can recognize some needs better than others, so its scores need not weigh the six personas as students do. CODuel replaces g(<i>p</i>, <i>q</i>) by the <i>p</i>-th entry of <i>A</i>·g(<i>q</i>), with <i>A</i> = <i>a</i>I + <i>A</i>′ fitted by logistic regression on all choices of the completed sessions. Because <i>A</i> is shared by all users, it carries what completed sessions reveal about the questions, while each user's own vector still describes that user.</p>
+      </div>
+      <div class="col">
+        <span class="k">population model</span>
+        <h3>A mixture prior from completed sessions</h3>
+        <p>After each session, an EM-style procedure refits a mixture of Gaussians over users' preference vectors. An isotropic component keeps prior mass for users unlike any seen so far, with weight at least α/(α + n) as under a Dirichlet process. Components are born when a session is better explained by the isotropic prior, and removed when weakly supported.</p>
+      </div>
+      <div class="col">
+        <span class="k">within-user adaptation</span>
+        <h3>A belief that sharpens with each click</h3>
+        <p>A new user starts from the mixture. After each choice, the learner updates a Laplace posterior inside every component and reweights the components by how well each explains the session so far. The mixture is the learner's belief about who this user is.</p>
+      </div>
+      <div class="col">
+        <span class="k">lookahead pair rule</span>
+        <h3>Pay now to learn who the user is</h3>
+        <p>Showing the pair with the lowest belief-averaged regret is greedy. When components disagree, a pair whose outcome tells them apart lowers regret for the rest of the session. CODuel scores each pair by its regret now plus the expected regret of greedy play over the remaining rounds, averaged over a bank of recent questions: a knowledge-gradient rule for strong regret.</p>
+      </div>
+      <div class="col">
+        <span class="k">evidence gate</span>
+        <h3>Transfer only while it predicts better</h3>
+        <p>A no-transfer learner runs alongside and both predict every click before it is revealed. The population learner selects pairs only while its log-likelihood ratio over completed sessions, after at least eight of them, exceeds half a standard error. Otherwise the no-transfer learner selects, and both keep observing.</p>
+      </div>
+    </div>
+    <p class="note">Main settings: α = 20, at most 16 learned components, gate threshold z = 0.5 after n<sub>min</sub> = 8 sessions, a question bank of 16, and a ridge of 10 on <i>A</i>′, first fitted after 20 sessions and refitted every 10. The paper's Appendix gives the full procedure as pseudocode and the sensitivity to each setting.</p>
+  </div>
+</section>
+
+<section id="use">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Run it</p>
+      <h2>Evaluate your own policy</h2>
+      <p>A policy is a Python class with five methods. The runner feeds it the persona-question features of each round and the click, and never the utilities, the profile, or the probabilities. The same class runs on every roster and on the simulator.</p>
+    </div>
+    <div class="two">
+      <div class="codeblock">
+        <div class="codehead"><span>The policy interface (persona_bench/protocol.py)</span><button class="copy" data-copy="#code-policy">Copy</button></div>
+<pre class="code" id="code-policy">class Policy:
+    name = "policy"
+
+    def reset(self, rng, context):   <span class="c"># once per run; context has K, d, S, beta, b, N</span>
+        self.rng, self.K, self.d = rng, context["K"], context["d"]
+
+    def start_student(self):         <span class="c"># a new user arrives</span>
+        pass
+
+    def select(self, Phi):           <span class="c"># Phi: K x d features for this question</span>
+        raise NotImplementedError    <span class="c"># return two distinct persona indices (i, j)</span>
+
+    def update(self, outcome):       <span class="c"># 1 if the first index won the click, else 0</span>
+        pass
+
+    def end_student(self):           <span class="c"># the user leaves; its session joins the log</span>
+        pass</pre>
+      </div>
+      <div class="codeblock">
+        <div class="codehead"><span>Install, test, and score on the held-out profiles</span><button class="copy" data-copy="#code-run">Copy</button></div>
+<pre class="code" id="code-run">pip install -r requirements.txt
+python -m pytest -q persona_bench/tests
+
+<span class="c"># 64 seeds on the held-out-profile roster, paired with random pairs</span>
+python results/bench.py --allow-test --tag mine --seeds 0-63 \
+  --competitor random --policies "random,none:emax:rt,&lt;your policy spec&gt;" \
+  --worlds pl_v3.1L_test_unseen_M8_t1_b24_ug_raw_rl1_fjevgw
+
+<span class="c"># the paper's statistics: scores, reference rows, paired gains with intervals</span>
+python results/paper_stats.py --tag mine \
+  --world pl_v3.1L_test_unseen_M8_t1_b24_ug_raw_rl1_fjevgw</pre>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <span class="k">what you get</span>
+        <h3>One JSON row per run</h3>
+        <p>Each (world, seed, policy) run caches its cumulative regret, the floor, the excess and per-user and per-round curves. Runs resume after interruption. CODuel takes one to two minutes per run on one core.</p>
+      </div>
+      <div class="col">
+        <span class="k">guard rails</span>
+        <h3>Held-out rosters are locked</h3>
+        <p>The <code>test_*</code> rosters need <code>--allow-test</code>, a guard against accidental looks at held-out data during development. Tune on the development roster, then run the three evaluation rosters once.</p>
+      </div>
+      <div class="col">
+        <span class="k">leaderboard entries</span>
+        <h3>Submissions open with the release</h3>
+        <p>The code and the dataset are in the paper's supplementary material now and will be released under an open license with the camera-ready version. We will then accept run rows for the three evaluation rosters, with the policy's code and tuning record.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Limitations</p>
+      <h2>What this benchmark does not show</h2>
+    </div>
+    <div class="prose">
+      <p>All preferences are simulated. The reference utilities are fitted from the same LLM judge's probabilities that generate the clicks, and the only human judgments are two authors' choices on 160 comparisons. We have not measured human satisfaction or learning outcomes, and the style a student prefers need not be the style that best supports learning. The benefits of transfer vary across held-out profiles, so average gains do not imply improvements for every profile.</p>
+      <p>CODuel assumes a stationary population and preferences fixed within a session. Linear utilities and Bradley–Terry feedback approximate the judge, and Laplace inference and the lookahead are approximate. We give no regret bound and no guarantee under preference drift or a misspecified population. The gate's repeatedly checked threshold is not anytime-valid. Reported intervals do not account for the adaptive development process. Closing the gap to the per-user oracle and validating with human users are the next steps.</p>
+    </div>
+  </div>
+</section>
+
+<section id="paper">
+  <div class="wrap stack">
+    <div class="section-head">
+      <p class="eyebrow">Paper</p>
+      <h2>Read and cite</h2>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <details class="plain">
+          <summary>Abstract</summary>
+          <div class="inner">Large language models can answer the same question in different styles, but users' preferred styles are hidden and vary across users and questions. We study inference-time personalization through online selection from a fixed set of prompts, each representing a persona. Users arrive sequentially, each asks a short sequence of questions, and the system displays two responses per question and observes one pairwise choice. We formulate this interaction as a variant of the contextual dueling bandit problem in which the learner starts without preference data, adapts within each session, and exploits information shared across users. The objective is to minimize cumulative strong regret, summing the utility gaps of both displayed responses relative to the user's best response among the available options. We make two contributions. First, we introduce the problem and release a reproducible preference benchmark and dataset built around a tutoring case study, containing educational questions, LLM-generated answers in six teaching styles, and pairwise judgments from LLM-simulated students with hidden preference profiles. We fit Bradley-Terry models to these judgments to obtain reference utilities for regret evaluation. Second, we propose a baseline that learns a mixture prior over users from completed sessions and adapts to each new user within the session. On students and topics never used in development, it removes 44–48% of random pairs' excess regret and achieves a little over half the performance of a per-user linear oracle fitted in hindsight. We release code, prompts, and the benchmark.</div>
+        </details>
+        <p>Preprint, 2026. The dataset contains no data about real people: profiles, questions and answers are LLM-generated, and the paper releases them for research on personalization algorithms, not as teaching material.</p>
+        <div class="actions">
+          <a class="btn" href="#paper" aria-disabled="true" title="Available soon">Paper <small>soon</small></a>
+          <a class="btn" href="#use" aria-disabled="true">Code <small>soon</small></a>
+          <a class="btn" href="#benchmark" aria-disabled="true">Dataset <small>soon</small></a>
+        </div>
+      </div>
+      <div class="codeblock">
+        <div class="codehead"><span>BibTeX</span><button class="copy" data-copy="#bibtex">Copy</button></div>
+<pre class="code" id="bibtex">@article{puech2026tutorduel,
+  title   = {Online {LLM} Personalization from Pairwise Preferences Across Users},
+  author  = {Puech, Romain and Salakhutdinov, Georgy and Bertsimas, Dimitris},
+  year    = {2026},
+  note    = {Preprint}
+}</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>TutorDuel and CODuel · Massachusetts Institute of Technology · 2026</span>
+    <span>Every number on this page is read from the paper's result files; the figures are drawn in the browser from that data.</span>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script src="loop-sim.js"></script>
+<script src="loop.js"></script>
+</body>
+</html>
