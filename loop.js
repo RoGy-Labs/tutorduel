@@ -41,9 +41,9 @@
   const lerp = (a, b, u) => a + (b - a) * u;
 
   /* --------------------------------------------------------------- state -- */
-  const SPEEDS = [1, 2, 4];                   // the speed button cycles through these; the page opens at the first
+  const SPEEDS = [0.25, 0.5, 1, 2, 4];        // the speed button cycles through these (1x, 2x, 4x, 0.25x, 0.5x); the page opens at 1x
   const loop = new SIM.Loop(D.arrivals, {});
-  let cur = null, lastCommit = null, committed = false, clock = 0, speed = SPEEDS[0], playing = !reduced, visible = true, lastAct = -1;
+  let cur = null, lastCommit = null, committed = false, clock = 0, speed = 1, playing = !reduced, visible = true, lastAct = -1;
   let shown = { mean: new Array(6).fill(0), sd: new Array(6).fill(1) };   // what the bars currently show
   let prevPop = [], popGlyphs = [];                                         // population glyphs with animated means
   let cycleSeed = 1;
