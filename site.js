@@ -415,6 +415,27 @@
     render();
   }
 
+  /* ------------------------------------------------------------ theme toggle */
+  const toggle = $('[data-theme-toggle]');
+  if (toggle) {
+    const root = document.documentElement;
+    const effective = () => root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const paint = () => {
+      const dark = effective() === 'dark';
+      toggle.textContent = dark ? '☀' : '☾';
+      toggle.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+    };
+    toggle.addEventListener('click', () => {
+      const next = effective() === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('td-theme', next); } catch (e) { /* storage may be unavailable */ }
+      paint();
+    });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paint);
+    new MutationObserver(paint).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    paint();
+  }
+
   /* ------------------------------------------------------------ copy buttons */
   $$('[data-copy]').forEach((b) => b.addEventListener('click', async () => {
     const src = $(b.dataset.copy);

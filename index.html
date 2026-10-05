@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <link rel="stylesheet" href="site.css">
+<script>try { var t = localStorage.getItem('td-theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
 <body>
 
@@ -25,6 +26,7 @@
       <a href="#use">Run it</a>
       <a href="#paper">Paper</a>
     </nav>
+    <button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme" title="Switch theme">☾</button>
   </div>
 </header>
 
@@ -41,10 +43,13 @@
       <strong>CODuel</strong> is a first baseline. It learns from completed sessions to adapt faster to each new user.
     </p>
     <div class="authors">
-      <div>Romain Puech</div>
-      <div>Georgy Salakhutdinov</div>
-      <div>Dimitris Bertsimas</div>
-      <span>Massachusetts Institute of Technology</span>
+      <div class="names">
+        <span>Romain Puech<sup>*</sup></span>
+        <span>Georgy Salakhutdinov<sup>*</sup></span>
+        <span>Dimitris Bertsimas</span>
+      </div>
+      <div class="affil"><span>Massachusetts Institute of Technology</span><span class="mono">{puech, salakh, dbertsim}@mit.edu</span></div>
+      <div class="eqc"><sup>*</sup> Equal contribution</div>
     </div>
     <div class="actions">
       <a class="btn" href="#paper" aria-disabled="true" title="Available soon">Paper <small>soon</small></a>
