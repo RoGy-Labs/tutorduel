@@ -1,0 +1,89 @@
+/* TutorDuel essay layout, layered on site.css (which keeps styling the widgets).
+   One centered reading column (680px) in a serif face; figures and widgets break out to 1080px with a caption below.
+   No section labels, no card grids: headings, paragraphs, figures. */
+:root {
+  --bg: #faf9f6; --panel: #ffffff; --panel-2: #efeee9; --line: #e2e0d9; --line-strong: #c4c1b8;
+  --font-text: "Source Serif 4", "IBM Plex Serif", Georgia, serif;
+  --font-display: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --col: 680px; --wide: 1080px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #151618; --panel: #1d1f22; --panel-2: #26282c; --line: #2e3034; --line-strong: #45484e; }
+}
+:root[data-theme="dark"] { --bg: #151618; --panel: #1d1f22; --panel-2: #26282c; --line: #2e3034; --line-strong: #45484e; }
+
+body { background: var(--bg); }
+section { border-top: 0; padding-block: 0; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; }
+
+/* top bar: name and five links */
+.top { background: color-mix(in srgb, var(--bg) 90%, transparent); }
+.brand { font-family: var(--font-display); font-weight: 600; }
+
+/* hero */
+.e-hero { max-width: 880px; margin: 0 auto; padding: clamp(56px, 9vw, 112px) 16px 40px; text-align: center; display: grid; gap: 20px; justify-items: center; }
+.e-kicker { margin: 0; font-family: var(--font-display); font-size: .86rem; font-weight: 500; color: var(--muted); }
+.e-hero h1 { font-size: clamp(2rem, 4.6vw, 3.25rem); line-height: 1.08; max-width: 20ch; }
+.e-byline { margin: 16px 0 0; display: grid; grid-template-columns: auto auto auto; justify-content: space-between; gap: 14px 32px; text-align: left;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 4px; width: 100%; }
+.e-byline div { display: grid; gap: 3px; }
+.e-byline dt { font-family: var(--font-display); font-size: .72rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.e-byline dd { margin: 0; font-size: .95rem; }
+.e-eqc { margin: 0; font-size: .82rem; color: var(--muted); }
+.e-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.btn.primary { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.btn.primary:disabled { background: var(--panel-2); border-color: var(--line-strong); color: var(--muted); opacity: 1; }
+
+/* reading column and wide figures */
+.e-text { max-width: var(--col); margin-inline: auto; padding-inline: 16px; font-family: var(--font-text); font-size: 1.12rem; line-height: 1.7; }
+.e-text p { margin: 0 0 1.05em; }
+.e-text h2 { font-size: 1.7rem; margin: 0 0 .7em; }
+.e-text h3 { font-size: 1.2rem; margin: 0 0 .5em; }
+.e-text b, .e-text strong { font-weight: 600; }
+.e-lead { font-size: 1.22rem; }
+.e-small { font-size: .95rem; color: var(--muted); }
+.e-sec { padding-top: clamp(56px, 8vw, 96px); }
+.e-wide { max-width: var(--wide); margin: 32px auto 40px; padding-inline: 16px; }
+.e-fig { display: grid; gap: 12px; }
+.e-fig figcaption { max-width: var(--col); margin-inline: auto; font-family: var(--font-display); font-size: .88rem; line-height: 1.55; color: var(--muted); }
+.e-fig figcaption b { color: var(--fg); font-weight: 600; }
+#loop { margin-top: 8px; margin-bottom: 64px; }
+
+/* collapsible details */
+.e-details { margin: 0 0 1.2em; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 0; }
+.e-details summary { cursor: pointer; font-family: var(--font-display); font-size: .92rem; font-weight: 500; color: var(--fg); }
+.e-details[open] summary { margin-bottom: 12px; }
+.e-details p { font-size: 1rem; }
+.e-details .formula { margin-bottom: 12px; }
+.e-details table, .e-lb table { font-family: var(--font-display); }
+
+/* personas as a plain two-column list instead of cards */
+.e-personas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 28px; margin: -4px 0 1.3em; }
+.e-personas .col { border-top: 0; padding: 6px 0; gap: 2px; font-family: var(--font-display); }
+.e-personas .col .k { display: none; }
+.e-personas .col h3 { font-size: .98rem; font-weight: 600; margin: 0; }
+.e-personas .col p { margin: 0; font-size: .88rem; color: var(--muted); line-height: 1.45; }
+.e-personas details.plain summary { font-size: .82rem; }
+.e-personas details.plain .inner { font-size: .85rem; }
+
+/* code */
+.e-text .codeblock { margin: 0 0 1.2em; font-family: var(--font-mono); }
+.e-text .code { font-size: .8rem; line-height: 1.55; }
+
+/* leaderboard: compact by default (references, CODuel, three best other methods, the ablation; score only) */
+.e-lb { margin-top: 24px; }
+.e-lb .tablewrap { margin-bottom: 12px; }
+.e-lb tr.ref td { color: var(--muted); font-style: italic; }
+.e-lb-tools { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-family: var(--font-display); font-size: .88rem; }
+.e-lb.compact tr.e-extra, .e-lb.compact .excess, .e-lb.compact tfoot { display: none; }
+
+/* the widgets keep site.css styling; give them the sans face so they read as figures */
+.loop, .player, .chart { font-family: var(--font-body); }
+
+footer { margin-top: clamp(64px, 9vw, 112px); }
+
+@media (max-width: 640px) {
+  .e-text { font-size: 1.04rem; }
+  .e-lead { font-size: 1.1rem; }
+  .e-byline { grid-template-columns: 1fr; gap: 12px; }
+}
