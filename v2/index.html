@@ -31,7 +31,6 @@
 <main id="top">
 
 <section class="e-hero">
-  <p class="e-kicker">Personalization · Benchmark</p>
   <h1>Online LLM Personalization from Pairwise Preferences Across Users</h1>
   <dl class="e-byline">
     <div><dt>Authors</dt><dd>Romain Puech<sup>*</sup>, Georgy Salakhutdinov<sup>*</sup>, Dimitris Bertsimas</dd></div>
@@ -55,7 +54,7 @@
         <div><dt>transfer gate</dt><dd data-h-gate data-on="false">off</dd></div>
       </dl>
       <div class="h-chart">
-        <span class="eyebrow">extra regret per student, as students arrive</span>
+        <span class="eyebrow">excess regret per student, by arrival</span>
         <canvas data-regret aria-label="Excess strong regret per user against arrival, CODuel and no transfer, revealed up to the current arrival"></canvas>
         <div class="readout" data-h-readout></div>
       </div>
@@ -70,34 +69,34 @@
       <button class="btn" data-l-speed style="margin-left:auto">1×</button>
     </div>
   </div>
-  <figcaption>Students arrive one at a time. For each of a student's 24 questions, the system shows two answers and sees which one the student picks. When the student leaves, the session is stored, and the next student starts from what earlier students had in common. The panel on the right shows the paper's measured curve for this group of students.</figcaption>
+  <figcaption>Students arrive one at a time. On each of a student's 24 questions, the system shows two answers and records the student's choice. When the student leaves, the session is stored, and the next student starts from what earlier students had in common. The panel on the right is the curve measured in the paper for this group of students.</figcaption>
 </figure>
 
 <article class="e-text">
-  <p class="e-lead">Ask a chatbot what amplitude modulation is, and it can answer in many ways: a formal definition, a worked example, a string of leading questions, an analogy, a short cheat-sheet, or numbered steps with encouragement. Which answer is best depends on who is asking. A first-year student who missed the lecture may need every step named in plain words. Someone revising for an exam may want one line they can quote.</p>
-  <p>A system that serves many people cannot ask each of them to fill in a questionnaire first. What it can do is show two answers and see which one the person picks. Each new user is a stranger who stays for a few questions, so the system has to learn quickly, and the main way to learn quickly is to reuse what earlier users revealed.</p>
-  <p>We built <strong>TutorDuel</strong>, a benchmark for this problem, around a tutoring case study. Simulated students with hidden preferences arrive one after another, each asks 24 questions, and a policy must choose which two of six tutoring styles to show every time. The policy is charged for both answers it shows, and the only feedback is the student's choice.</p>
-  <p>We also propose <strong>CODuel</strong>, a first baseline that learns from completed sessions which kinds of students recur. On students and topics never used during development, it removes 44 to 48 percent of the extra regret that random choices incur, a little over half of what a per-student oracle fitted in hindsight achieves.</p>
+  <p class="e-lead">Ask a chatbot what amplitude modulation is and it can answer in several ways: a formal definition, a worked example, a series of leading questions, an analogy, a short list of bullet points, or numbered steps with encouragement. The best answer depends on who asks. A first-year student who missed the lecture may need each step named in plain words, while a student revising for an exam may want one line to quote.</p>
+  <p>A system that serves many people cannot ask each of them to fill in a questionnaire first. It can show two answers and record which one the person picks. Each new user stays for only a few questions, so the system has to reuse what earlier users revealed.</p>
+  <p><strong>TutorDuel</strong> is a benchmark for this problem, built around tutoring. Simulated students with hidden preferences arrive one after another, and each asks 24 questions. For every question, a policy picks two of six tutor personas to answer, pays for both answers, and observes only the student's choice.</p>
+  <p><strong>CODuel</strong> is our baseline for it. It learns from completed sessions which kinds of students recur. On students and topics never used during development, it removes 44 to 48% of the excess regret of random pairs, a little over half of what a per-student oracle fitted in hindsight removes.</p>
 </article>
 
 <section class="e-sec" id="problem">
   <div class="e-text">
     <h2>The problem</h2>
-    <p>Each round has the same shape. A student asks a question, the system picks two of the six tutoring styles, both answers are generated, and the student chooses one. The figure below walks through a round.</p>
+    <p>Every round follows the same steps (Figure 1). A student asks a question, the policy picks two of the six personas, both answers are generated, and the student chooses one.</p>
   </div>
   <figure class="e-wide e-fig">
     <img src="assets/fig1_overview.png" alt="Four panels: a new user arrives with hidden preferences and a question; the policy picks two of six personas using completed sessions; the user chooses between the two generated answers; strong regret sums both answers' gaps to the user's best persona." width="2600" height="932">
-    <figcaption><b>Figure 1.</b> One round of the interaction. The policy picks two of the six personas using earlier students' sessions and this student's choices so far. Its cost on the round adds up how far each displayed answer falls short of the student's best one.</figcaption>
+    <figcaption><b>Figure 1.</b> One round. The policy picks two personas using earlier students' sessions and this student's choices so far. Its cost for the round is how far each of the two answers falls short of the student's best persona.</figcaption>
   </figure>
   <div class="e-text">
-    <p><b>Every student comes once.</b> A student's preferences stay fixed for their 24 questions, and then they leave. Students are different, but not entirely: some kinds of students recur, and that shared structure is what a system can learn across students.</p>
-    <p><b>Styles are described before anything is generated.</b> Each style is a system prompt, and a cheap rater model scores how well each style suits a question from the question text alone. A policy can therefore rank the six styles without generating any answers. Only the two it shows are produced.</p>
-    <p><b>Both answers count.</b> We charge the policy for each displayed answer by how far it falls short of the student's best style on that question. Even a policy that knows the student perfectly pays something, because it must show a second-best answer next to the best one. We subtract that unavoidable part and call the rest <em>extra regret</em>.</p>
-    <p><b>The score is the share of extra regret removed.</b> Picking pairs at random scores 0. Showing the student's two best styles on every question would score 100, which no policy is expected to reach. As a realistic ceiling, an oracle that knows each student's preference weights in hindsight scores 81 to 85.</p>
+    <p>Each student comes once, keeps the same preferences for 24 questions, and leaves. Students differ, yet some kinds of students recur, and a policy can learn that structure from one student to the next.</p>
+    <p>A persona is a system prompt that sets a teaching style. Before any answer is generated, a cheap rater model scores how well each persona suits the question from the question text alone. A policy can therefore rank the six personas first and generate only the two answers it shows.</p>
+    <p>The policy pays for both answers it shows. For each one, it pays the gap between the student's best persona and the persona shown. A policy that knew the student perfectly would still pay for showing the second-best answer next to the best one, so we subtract this unavoidable cost and call the remainder the excess regret.</p>
+    <p>The benchmark score is the percentage of random pairs' excess regret that a policy removes. Random pairs score 0, and showing each student's two best personas on every question would score 100. No policy is expected to reach 100. An oracle that knows each student's preference weights in hindsight scores 81 to 85.</p>
     <details class="e-details">
       <summary>Exact definitions</summary>
       <div class="formula">r<sub>t</sub> = 2·U<sub>i</sub>(p*, q<sub>t</sub>) − U<sub>i</sub>(p<sub>t,1</sub>, q<sub>t</sub>) − U<sub>i</sub>(p<sub>t,2</sub>, q<sub>t</sub>)<br>R<sub>T</sub> = Σ<sub>t</sub> r<sub>t</sub> &nbsp;&nbsp; excess regret = R<sub>T</sub> − G<sub>T</sub><br>benchmark score = 100 · (R<sub>T</sub><sup>rand</sup> − R<sub>T</sub>) / (R<sub>T</sub><sup>rand</sup> − G<sub>T</sub>)</div>
-      <p>U<sub>i</sub>(p, q) = θ<sub>i</sub><sup>⊤</sup>φ(p, q) is student <i>i</i>'s utility for persona <i>p</i> on question <i>q</i>, and the student's choice follows a Bradley–Terry–Luce model on the two displayed answers. G<sub>T</sub> is the distinct-pair floor: the regret of always showing the best and second-best persona. In the paper's terms the problem is a multi-user contextual dueling bandit with strong regret.</p>
+      <p>U<sub>i</sub>(p, q) = θ<sub>i</sub><sup>⊤</sup>φ(p, q) is student <i>i</i>'s utility for persona <i>p</i> on question <i>q</i>, and the student's choice follows a Bradley–Terry–Luce model on the two displayed answers. G<sub>T</sub> is the distinct-pair floor, the regret of always showing the best and second-best personas. In the paper's terms, the problem is a multi-user contextual dueling bandit with strong regret.</p>
     </details>
   </div>
 </section>
@@ -105,14 +104,14 @@
 <section class="e-sec" id="benchmark">
   <div class="e-text">
     <h2>What is in the benchmark</h2>
-    <p><b>Six tutoring styles.</b> Each is one system prompt. Open a style to read its prompt.</p>
+    <p>Each of the six personas is one system prompt. Open a persona to read its prompt.</p>
     <div class="e-personas" data-persona-cards></div>
-    <p><b>Questions.</b> Each session has 24 questions across four topics, written by an LLM. Every question ends with a short first-person cue, such as <i>“I need a line I can quote in an exam,”</i> so the best style can change from one question to the next.</p>
-    <p><b>Students.</b> Each simulated student is a written profile. Sixteen were written by hand, eight for development and eight held out. Two larger groups of 350 students each are generated from a template of seven traits, one with distinct trait combinations and one with added quirks, such as disliking numbered lists.</p>
-    <p><b>The judge.</b> An LLM plays each student and picks between two answers. We asked it about every pair of styles in both display orders, many times over, and stored the probabilities: 2.4 million prompts in total. Benchmark runs replay these stored probabilities, so evaluating a policy needs no GPU and no API key.</p>
-    <p><b>Checks.</b> Two authors labeled 200 choices by hand. The judge agreed with each of them about as often as they agreed with each other. A second, different judge agreed with the first on 81 percent of the comparisons where neither was indifferent, and CODuel ranked first under both.</p>
+    <p>A session has 24 questions on four topics, written by an LLM. Each question ends with a short first-person cue, such as "I need a line I can quote in an exam", so the best persona can change from one question to the next.</p>
+    <p>Each simulated student has a written profile. We wrote sixteen profiles by hand (eight for development, eight held out) and generated two groups of 350 students from a template of seven traits. One group uses distinct trait combinations; the other adds quirks, such as a dislike of numbered lists.</p>
+    <p>An LLM judge plays each student and picks between two answers. We asked it about every pair of personas, in both display orders and several times each, and stored the probabilities, 2.4 million prompts in total. Benchmark runs replay the stored probabilities, so evaluating a policy needs no GPU and no API key.</p>
+    <p>To check the judge, two authors labeled 200 choices by hand. The judge agreed with each author about as often as the two authors agreed with each other. A second judge, built on a different model, agreed with the first on 81% of the comparisons where neither was indifferent, and CODuel ranked first under both.</p>
     <details class="e-details">
-      <summary>Groups of students used for evaluation</summary>
+      <summary>Groups of students</summary>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Group</th><th>Students</th><th>Used for</th></tr></thead>
@@ -125,7 +124,7 @@
           </tbody>
         </table>
       </div>
-      <p>Each group serves 300 to 350 students in sequence. All evaluation groups use topics that never appear in development.</p>
+      <p>Each group serves 300 to 350 students in sequence. The evaluation groups use topics that never appear in development.</p>
     </details>
   </div>
 </section>
@@ -133,7 +132,7 @@
 <section class="e-sec" id="results">
   <div class="e-text">
     <h2>Results</h2>
-    <p>Every method starts with no data and serves the students in order. A method that treats each student alone does not get better over time. CODuel also treats each student alone at first, and switches on sharing once it has seen at least eight students and sharing predicts their choices better. From then on, it gets better with every student.</p>
+    <p>Every method starts with no data and serves the students in order (Figure 2). A method that learns each student alone stays flat. CODuel also learns each student alone at first. Once it has seen at least eight students and the shared model predicts their choices better, it switches sharing on and improves with each new student.</p>
   </div>
   <figure class="e-wide e-fig">
     <div class="card chart" data-curves>
@@ -149,17 +148,17 @@
       <div class="readout" data-readout></div>
       <p class="hint" data-curve-caption hidden></p>
     </div>
-    <figcaption><b>Figure 2.</b> Extra regret per student as students arrive (lower is better), smoothed over 25 students. Click a method in the legend to hide it. The bands are 95 percent intervals over random seeds.</figcaption>
+    <figcaption><b>Figure 2.</b> Excess regret per student as students arrive (lower is better), averaged over windows of 25 students. Click a method in the legend to hide it. Bands are 95% intervals over random seeds.</figcaption>
   </figure>
   <div class="e-text">
-    <p>In the last quarter of the students, CODuel's extra regret is 31, 27 and 30 percent lower than that of the same learner without sharing, on the three evaluation groups.</p>
-    <p><b>Sharing is easy to get wrong.</b> On the eight held-out hand-written profiles, every other method that shares information across students does worse than learning each student alone. On the two larger template groups the same methods do better than learning alone, but CODuel still leads.</p>
-    <p><b>Most of the remaining gap is identifying the student.</b> Showing each student's single best pair of styles throughout, chosen in hindsight, already scores 66 to 76. The oracle, which can also change the pair from one question to the next, scores 81 to 85.</p>
-    <p><b>Sharing switches off when it should.</b> When we scramble each student's choices so that students have nothing in common, CODuel stays within one percent of learning alone.</p>
+    <p>Over the last quarter of the students, CODuel's excess regret is 31%, 27% and 30% lower than that of the same learner without sharing on the three evaluation groups.</p>
+    <p>On the eight held-out hand-written profiles, every other method that shares information across students does worse than learning each student alone. On the two template groups, those methods do better than learning alone, and CODuel stays ahead of them.</p>
+    <p>Most of the remaining gap comes from identifying the student. The single pair that works best for all students scores 5 to 22 (the best fixed pair in the table below). Each student's own best pair, chosen in hindsight, scores 66 to 76, and the oracle, which can also change the pair from one question to the next, scores 81 to 85.</p>
+    <p>When we scramble each student's choices so that students share nothing, CODuel stays within 1% of learning alone, because its check turns sharing off.</p>
   </div>
   <div class="e-text e-lb" data-leaderboard>
     <h3>Leaderboard</h3>
-    <p class="e-small">Benchmark score: the share of random pairs' extra regret removed, higher is better. Grey rows are references. Click a column to sort by it.</p>
+    <p class="e-small">Benchmark score, higher is better. Grey rows are references. Click a column name to sort by it.</p>
     <div class="tablewrap"><table data-table></table></div>
     <div class="e-lb-tools">
       <button class="btn" type="button" data-lb-toggle>Show all methods and details</button>
@@ -171,12 +170,10 @@
 <section class="e-sec" id="method">
   <div class="e-text">
     <h2>How CODuel works</h2>
-    <p>CODuel keeps a belief about who the current student is, and builds that belief from the students it has already served.</p>
-    <p><b>It learns which kinds of students recur.</b> After each session, it updates a small set of student types, each a cluster of similar preferences. It always keeps room for a student unlike any seen so far.</p>
-    <p><b>It narrows down each new student.</b> A new student starts as a mix of all known types. Each choice shifts the mix toward the types that explain the choices so far.</p>
-    <p><b>It asks informative questions early.</b> When the types disagree about which pair to show, CODuel may show a pair whose outcome tells them apart. This costs a little now and saves more over the rest of the session.</p>
-    <p><b>It corrects the rater.</b> The rater that scores styles for each question is good at recognizing some needs and worse at others. CODuel learns a correction from the choices of past students.</p>
-    <p><b>It shares only when sharing helps.</b> A copy that learns each student alone runs alongside. Both predict every choice before it is revealed, and CODuel uses what it learned from other students only while that prediction is better.</p>
+    <p>CODuel keeps a belief about who the current student is and builds it from the students it has already served. After each session, it updates a small set of student types, each a cluster of similar preferences, and keeps some weight for a student unlike any seen so far. A new student starts as a mix of all known types, and each choice moves the mix toward the types that explain the choices so far.</p>
+    <p>When the types disagree about which pair to show, CODuel may show a pair whose outcome tells them apart. It pays a little on that question and saves more over the rest of the session.</p>
+    <p>The rater's scores are more accurate for some needs than for others, so CODuel also learns a correction to them from past students' choices.</p>
+    <p>A second learner, which treats each student alone, runs alongside. Both predict every choice before it is revealed, and CODuel uses the shared model only while it predicts better.</p>
     <p class="e-small">All settings were fixed on the development students. The paper gives the full procedure and the sensitivity to each setting.</p>
   </div>
 </section>
@@ -184,7 +181,7 @@
 <section class="e-sec" id="play">
   <div class="e-text">
     <h2>Try it: be the policy</h2>
-    <p>Here is a real session from the held-out profiles. Each round, pick two styles. The student's choice is drawn from the judge's stored probabilities, exactly as in the benchmark, and the student's hidden preferences are revealed after each choice.</p>
+    <p>This is a real session from the held-out profiles. In each round, pick two personas. The student's choice is drawn from the judge's stored probabilities, as in the benchmark, and the student's hidden utilities appear after each choice.</p>
   </div>
   <div class="e-wide">
     <div class="player" data-play>
@@ -212,7 +209,7 @@
             <button class="copy" data-peek>Peek</button>
           </div>
           <p class="text" data-profile-text data-hidden="true"></p>
-          <p class="hint">The policy never sees this text, only the question, the six style prompts and the choices so far.</p>
+          <p class="hint">The policy never sees this profile. It sees the question, the persona prompts and the choices so far.</p>
         </div>
         <div class="card tally">
           <div class="score"><b data-score>–</b><span>your score so far</span></div>
@@ -230,7 +227,7 @@
 <section class="e-sec" id="use">
   <div class="e-text">
     <h2>Run your own policy</h2>
-    <p>A policy is a Python class with five methods. The runner gives it each question's style features and the student's choice, never the hidden preferences. The code and data will be released with the camera-ready version.</p>
+    <p>A policy is a Python class with five methods. The runner passes it the persona features of each question and the student's choice, and never the hidden utilities. Code and data will be released with the camera-ready version.</p>
     <div class="codeblock">
       <div class="codehead"><span>persona_bench/protocol.py</span><button class="copy" data-copy="#code-policy">Copy</button></div>
 <pre class="code" id="code-policy">class Policy:
@@ -267,7 +264,7 @@ python results/bench.py --allow-test --tag mine --seeds 0-63 \
 python results/paper_stats.py --tag mine \
   --world pl_v3.1L_test_unseen_M8_t1_b24_ug_raw_rl1_fjevgw</pre>
       </div>
-      <p>The held-out groups need <code>--allow-test</code>, a guard against looking at them by accident during development. CODuel takes one to two minutes per run on one CPU core.</p>
+      <p>The held-out groups require <code>--allow-test</code>, which guards against looking at them by accident during development. CODuel takes one to two minutes per run on one CPU core.</p>
     </details>
   </div>
 </section>
@@ -275,8 +272,8 @@ python results/paper_stats.py --tag mine \
 <section class="e-sec" id="limits">
   <div class="e-text">
     <h2>Limitations</h2>
-    <p>All preferences are simulated. The same LLM judge produces the choices and the hidden preferences they are scored against, and the only human labels are the authors' 200 choices. We have not measured whether real students are more satisfied or learn more, and the style a student prefers need not be the one that helps them learn best.</p>
-    <p>CODuel assumes that the population of students does not change over time and that each student's preferences stay fixed within a session. We give no theoretical guarantee. Closing the gap to the oracle and testing with real users are the next steps.</p>
+    <p>All preferences are simulated. The same LLM judge produces the choices and the utilities they are scored against, and the only human labels are the 200 choices two authors made. We have not measured whether real students are more satisfied or learn more, and the persona a student prefers may not be the one that teaches them best.</p>
+    <p>CODuel assumes that the student population does not change over time and that each student's preferences stay fixed during a session. We give no theoretical guarantee.</p>
   </div>
 </section>
 
@@ -292,7 +289,7 @@ python results/paper_stats.py --tag mine \
   note    = {Preprint}
 }</pre>
     </div>
-    <p class="e-small">The dataset contains no data about real people: profiles, questions and answers are LLM-generated.</p>
+    <p class="e-small">The dataset contains no data about real people. Profiles, questions and answers are LLM-generated.</p>
   </div>
 </section>
 

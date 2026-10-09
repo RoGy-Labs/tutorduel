@@ -1,5 +1,5 @@
 /* Essay page: compact leaderboard. site.js renders the full table (and re-renders it on every sort);
-   here we tag the rows to hide in compact mode: every method below the three best others by the sorted column. */
+   here we tag the rows to hide in compact mode: every method below the three best others by the sorted column, and the floor row. */
 (() => {
   'use strict';
   const lb = document.querySelector('[data-leaderboard]');
@@ -11,7 +11,9 @@
   const tag = () => {
     let others = 0;
     table.querySelectorAll('tbody tr').forEach((tr) => {
-      if (tr.classList.contains('ref') || tr.classList.contains('ours') || tr.classList.contains('ablation')) return;
+      // the distinct-pair floor scores 100 by definition; it only matters next to the excess values
+      if (tr.classList.contains('ref')) { tr.classList.toggle('e-extra', /floor/i.test(tr.cells[0].textContent)); return; }
+      if (tr.classList.contains('ours') || tr.classList.contains('ablation')) return;
       tr.classList.toggle('e-extra', ++others > SHOWN_OTHERS);
     });
   };
